@@ -1,5 +1,5 @@
 import random
-import math
+import argparse
 import numpy as np
 from skimage import draw
 import matplotlib.pyplot as plt
@@ -119,32 +119,54 @@ def create_dataset_image(numLines, numNoise, dims, fname):
     fig = plt.imshow(img)
     fig.set_cmap(cm.gray)
     plt.axis('off')
-    plt.savefig(f'{fname}.jpg', bbox_inches='tight', pad_inches=0)
+    plt.savefig(f'./data/{fname}.jpg', bbox_inches='tight', pad_inches=0)
     print('image saved!')
     ht, lines = get_hough_transform(img)
     print('saving hough transform...')
     fig = plt.imshow(ht)
     fig.set_cmap(cm.gray)
     plt.axis('off')
-    plt.savefig(f'{fname}_ht.jpg', bbox_inches='tight', pad_inches=0)
+    plt.savefig(f'./data/{fname}_ht.jpg', bbox_inches='tight', pad_inches=0)
     print('hough transform saved!')
     labels = get_pixel_coords(lines)
     return lines, labels
 
 
-def add_to_dataframe(df, fname, lines, labels):
-    new_line = pd.DataFrame([fname, lines, labels], columns=[
+def add_to_dataframe(fname, lines, labels, df=None):
+    new_line = pd.DataFrame([[fname, lines, labels]], columns=[
                             'name', 'polars', 'labels'])
-    new_df = pd.concat(df, new_line)
+    new_df = pd.concat([df, new_line])
     return new_df
 
 
 def main(numImages, numLines, numNoise, dims):
     print('#### CREATING DATASET ####')
+    dims = (dims, dims)
+    csv = pd.DataFrame(columns=['name', 'polars', 'labels'])
     for i in range(numImages):
-        filename = f'{numLines}l_{numNoise}n-{i}'
-        print(f'** creating image {filename}.jpg **')
-        create_dataset_image(numLines, numNoise, dims, filename)
+        filename = f'{numLines}l_{numNoise}n-{i+1}'
+        print(f'** generating image {filename} **')
+        lines, labels = create_dataset_image(
+            numLines, numNoise, dims, filename)
+        print('adding image data to csv...')
+        csv = add_to_dataframe(filename, lines, labels, csv)
+        print('image data added to csv!\n')
+    print('saving final csv...')
+    csv.to_csv(f'./data/{numLines}l_{numNoise}n.csv')
+    print('final csv saved!')
+    print('#### DATASET CREATION DONE ####')
+
 
 if __name__ == '__main__':
-    create_dataset_image(1, 1, (200, 200), '1.jpg')
+    parser = argparse.ArgumentParser(
+        description='Hough Peaks Detector Dataset Generator')
+    parser.add_argument('-i', '--images', type=int,
+                        required=True, help='number of images')
+    parser.add_argument('-l', '--lines', type=int, required=True,
+                        help='number of lines on each image')
+    parser.add_argument('-n', '--noise', type=int, required=True,
+                        help='number of sinusoid noise on each image')
+    parser.add_argument('-d', '--dims', type=int, required=True,
+                        help='single dimension (pixels) of the square images')
+    args = parser.parse_args()
+    main(args.images, args.lines, args.noise, args.dims)
