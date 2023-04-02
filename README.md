@@ -6,19 +6,25 @@ The scripts are contained in jupyter notebooks, and can be accessed trhough goog
 
 ## Installation
 
-Even though it can be installed in the global python environment, it is prefferable to install it in a virtual environment as follows:
+Make sure you run the submodules command in order to get the dataset from it's repo. Even though it can be installed in the global python environment, it is prefferable to install it in a virtual environment as follows:
 
-1. Install ```virtualenv``` if you don't already have it.
+1. Clone the repository with the submodule option:
+
+    ```bash
+    git clone --recurse-submodules https://github.com/ceschini/ht-peaks-detection.git
+    ```
+
+2. Install ```virtualenv``` if you don't already have it.
 
     ```pip install virtualenv```
 
-2. Create a new virtual environment via the ```virtualenv``` package.
+3. Create a new virtual environment via the ```virtualenv``` package.
 
-```virtualenv .venv```
+    ```virtualenv .venv```
 
-3.Install python packages requirements.
+4. Install python packages requirements.
 
-```pip install -r requirements.txt```
+    ```pip install -r requirements.txt```
 
 ## Usage
 
