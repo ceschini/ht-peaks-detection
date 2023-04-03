@@ -1,5 +1,6 @@
 import random
 import argparse
+import xml.etree.ElementTree as ET
 import numpy as np
 from skimage import draw
 import matplotlib.pyplot as plt
@@ -22,8 +23,10 @@ def draw_random_lines(numLines, image, dims):
     return image
 
 # super noisy sinusoids approach 2
-# changing randomly sinusoid parameters for each line determined by numNoise to avoid overlap
-# adding rotation so the lines can take more positions other than being horizontal
+# changing randomly sinusoid parameters
+# for each line determined by numNoise to avoid overlap
+# adding rotation so the lines can take
+# more positions other than being horizontal
 
 
 def rotate_points(x, y, angle_degrees, origin):
@@ -35,7 +38,10 @@ def rotate_points(x, y, angle_degrees, origin):
     return qx, qy
 
 
-def sinusoid_noise2(numNoise, image, dims, num_points=100, amplitude_range=(5, 15), frequency_range=(1, 4), noise_factor=5, angle_range=(0, 360), line_thickness=0.5):
+def sinusoid_noise2(numNoise, image, dims, num_points=100,
+                    amplitude_range=(5, 15), frequency_range=(1, 4),
+                    noise_factor=5, angle_range=(0, 360), line_thickness=0.5):
+
     height, width = dims
 
     for _ in range(numNoise):
@@ -134,15 +140,74 @@ def add_to_dataframe(fname, lines, labels, df=None):
     return new_df
 
 
+def make_annotation(fname, folder, labels):
+    # Creating XML structure
+    annon = ET.Element('annotation')
+    folder_el = ET.SubElement(annon, 'folder')
+    filename_el = ET.SubElement(annon, 'filename')
+    path_el = ET.SubElement(annon, 'path')
+    source_el = ET.SubElement(annon, 'source')
+    source_database_el = ET.SubElement(source_el, 'database')
+    size_el = ET.SubElement(annon, 'size')
+    size_width_el = ET.SubElement(size_el, 'width')
+    size_height_el = ET.SubElement(size_el, 'height')
+    size_depth_el = ET.SubElement(size_el, 'depth')
+    segmented_el = ET.SubElement(annon, 'segmented')
+
+    # Populating XML elements
+    folder_el.text = folder
+    filename_el.text = fname
+    path_el.text = f'{folder}/{fname}.png'
+    source_database_el.text = 'Unknown'
+    size_width_el.text = '360'
+    size_height_el.text = '567'
+    size_depth_el.text = '3'
+    segmented_el.text = '0'
+
+    for i, label in enumerate(labels):
+        object_el = ET.SubElement(annon, 'object')
+        object_name_el = ET.SubElement(object_el, 'name')
+        object_pose_el = ET.SubElement(object_el, 'pose')
+        object_truncated_el = ET.SubElement(object_el, 'truncated')
+        object_difficult_el = ET.SubElement(object_el, 'difficult')
+        bndbox_el = ET.SubElement(object_el, 'bndbox')
+        bndbox_xmin_el = ET.SubElement(bndbox_el, 'xmin')
+        bndbox_ymin_el = ET.SubElement(bndbox_el, 'ymin')
+        bndbox_xmax_el = ET.SubElement(bndbox_el, 'xmax')
+        bndbox_ymax_el = ET.SubElement(bndbox_el, 'ymax')
+        object_name_el.text = f'peak_{i + 1}'
+        object_pose_el.text = 'Unspecified'
+        object_truncated_el.text = '0'
+        object_difficult_el.text = '0'
+        x_coord = int(label[0])
+        y_coord = int(label[1])
+        bndbox_xmin_el.text = f'{x_coord - 5}'
+        bndbox_ymin_el.text = f'{y_coord - 5}'
+        bndbox_xmax_el.text = f'{x_coord + 5}'
+        bndbox_ymax_el.text = f'{y_coord + 5}'
+
+    # converting xml to bytes
+    b_xml = ET.tostring(annon)
+
+    # flushing data to file stream
+    with open(f'./data/{fname}.xml', 'wb') as f:
+        f.write(b_xml)
+
+    return 1
+
+
 def main(numImages, numLines, numNoise, dims):
     print('#### CREATING DATASET ####')
     dims = (dims, dims)
     csv = pd.DataFrame(columns=['name', 'polars', 'labels'])
     for i in range(numImages):
         filename = f'{numLines}l_{numNoise}n-{i+1}'
+        folder = f'{numLines}l_{numNoise}n'
         print(f'** generating image {filename} **')
         lines, labels = create_dataset_image(
             numLines, numNoise, dims, filename)
+        print('generating pascal VOC annotation...')
+        make_annotation(filename, folder, labels)
         print('adding image data to csv...')
         csv = add_to_dataframe(filename, lines, labels, csv)
         print('image data added to csv!\n')
