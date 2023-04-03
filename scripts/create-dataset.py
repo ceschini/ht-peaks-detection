@@ -116,17 +116,12 @@ def draw_detected_lines(image, coords):
 def create_dataset_image(numLines, numNoise, dims, fname):
     img = generate_image(numLines, numNoise, dims)
     print('saving generated image...')
-    fig = plt.imshow(img)
-    fig.set_cmap(cm.gray)
-    plt.axis('off')
-    plt.savefig(f'./data/{fname}.jpg', bbox_inches='tight', pad_inches=0)
+    plt.imsave(fname=f"./data/{fname}.png", arr=img, cmap='gray', format='png')
     print('image saved!')
     ht, lines = get_hough_transform(img)
     print('saving hough transform...')
-    fig = plt.imshow(ht)
-    fig.set_cmap(cm.gray)
-    plt.axis('off')
-    plt.savefig(f'./data/{fname}_ht.jpg', bbox_inches='tight', pad_inches=0)
+    plt.imsave(fname=f"./data/{fname}-ht.png",
+               arr=ht, cmap='gray', format='png')
     print('hough transform saved!')
     labels = get_pixel_coords(lines)
     return lines, labels
