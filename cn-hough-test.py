@@ -98,8 +98,8 @@ def show_original_image_with_bounding_box(finetuned_model, img_file):
     cv2.destroyAllWindows()
 
 def main():
-    csv_path = r'table.csv'  # add the path to the csv file with labels
-    img_folder = r'dataset'  # add the path to the folder with dataset images
+    csv_path = r'ht-peaks-dataset/1l_1n/1l_1n.csv'  # add the path to the csv file with labels
+    img_folder = r'ht-peaks-dataset/1l_1n'  # add the path to the folder with dataset images
     images, boxes = input_pipeline(csv_path, img_folder)
     finetuned_model = train_model(images, boxes)
     img_file = r'ht-image.png'  # add the path to a new ht image for peak extraction

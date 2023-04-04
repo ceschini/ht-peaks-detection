@@ -133,10 +133,19 @@ def create_dataset_image(numLines, numNoise, dims, fname):
     return lines, labels
 
 
-def add_to_dataframe(fname, lines, labels, df=None):
-    new_line = pd.DataFrame([[fname, lines, labels]], columns=[
-                            'name', 'polars', 'labels'])
-    new_df = pd.concat([df, new_line])
+# def add_to_dataframe(fname, lines, labels, df=None):
+#     new_line = pd.DataFrame([[fname, lines, labels]], columns=[
+#                             'name', 'polars', 'labels'])
+#     new_df = pd.concat([df, new_line])
+#     return new_df
+
+def add_to_dataframe(image_id, labels, df=None):
+    for label in labels:
+        x = label[0]
+        y = label[1]
+        new_line = pd.DataFrame([[image_id, x, y]], columns=['image_id', 'x', 'y'])
+        new_df = pd.concat([df, new_line])
+
     return new_df
 
 
@@ -199,7 +208,10 @@ def make_annotation(fname, folder, labels):
 def main(numImages, numLines, numNoise, dims):
     print('#### CREATING DATASET ####')
     dims = (dims, dims)
-    csv = pd.DataFrame(columns=['name', 'polars', 'labels'])
+    # csv = pd.DataFrame(columns=['name', 'polars', 'labels'])
+    csv = pd.DataFrame(  # new wheat
+        columns=['image_id', 'x', 'y']
+        )
     for i in range(numImages):
         filename = f'{numLines}l_{numNoise}n-{i+1}'
         folder = f'{numLines}l_{numNoise}n'
@@ -209,7 +221,8 @@ def main(numImages, numLines, numNoise, dims):
         print('generating pascal VOC annotation...')
         make_annotation(filename, folder, labels)
         print('adding image data to csv...')
-        csv = add_to_dataframe(filename, lines, labels, csv)
+        # csv = add_to_dataframe(filename, lines, labels, csv)
+        csv = add_to_dataframe(filename, labels, csv)
         print('image data added to csv!\n')
     print('saving final csv...')
     csv.to_csv(f'./data/{numLines}l_{numNoise}n.csv')
